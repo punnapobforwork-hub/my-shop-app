@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ร้านฉัน — Food Profit Manager V4.2</title>
+<style>
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#1e293b;--muted:#64748b;
+  --primary:#ea580c;--green:#16a34a;--red:#dc2626;
+  --yellow:#d97706;--blue:#2563eb;--line:#e2e8f0
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+header{background:linear-gradient(135deg,#9a3412,var(--primary));color:#fff;padding:22px max(20px,calc((100% - 1250px)/2));display:flex;gap:18px;align-items:center;justify-content:space-between}
+header h1{font-size:22px;margin:0}
+header p{margin:4px 0 0;opacity:.88;font-size:13px}
+.wrap{max-width:1250px;margin:auto;padding:20px}
+nav{display:flex;gap:8px;overflow:auto;padding-bottom:8px;position:sticky;top:0;background:var(--bg);z-index:10;padding-top:8px}
+nav button{border:1px solid var(--line);background:#fff;color:#475569;padding:10px 13px;border-radius:10px;white-space:nowrap;cursor:pointer;font-weight:700}
+nav button.active{color:#fff;background:var(--primary);border-color:var(--primary)}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.grid.two{grid-template-columns:repeat(2,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px #0f172a08}
+.metric small,.label{color:var(--muted);font-weight:700;font-size:12px}
+.metric b{display:block;font-size:25px;margin-top:6px}
+h2{font-size:20px;margin:18px 0 10px}
+h3{font-size:16px;margin:0 0 14px}
+form,.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.full{grid-column:1/-1}.span2{grid-column:span 2}
+label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font:inherit;color:var(--text)}
+button{font:inherit}
+.btn{border:0;border-radius:8px;padding:10px 14px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(.95)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.secondary{background:#e2e8f0;color:#334155}
+.btn.danger{background:var(--red)}.btn.green{background:var(--green)}.btn.blue{background:var(--blue)}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.actions .btn{padding:7px 9px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{color:var(--muted);font-size:12px;background:#f8fafc}
+.table-wrap{overflow:auto}.empty{color:var(--muted);text-align:center;padding:24px}
+.alert,.info,.success{padding:11px 13px;border-radius:9px;margin:10px 0}
+.alert{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}
+.recipe-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin:8px 0;align-items:center}
+.tag{display:inline-block;padding:3px 7px;border-radius:20px;background:#f1f5f9;color:#334155;font-size:11px;font-weight:700}
+.tag.green{background:#dcfce7;color:#166534}.tag.red{background:#fee2e2;color:#991b1b}
+.note{font-size:12px;color:var(--muted);margin:8px 0}.right{text-align:right}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+progress{width:100%;height:14px}
+#toast{display:none;position:fixed;right:18px;bottom:18px;z-index:100;background:#0f172a;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 8px 25px #0003;max-width:380px}
+@media(max-width:850px){
+  .grid,.grid.two{grid-template-columns:1fr 1fr}
+  form,.form-grid{grid-template-columns:1fr 1fr}.span2{grid-column:span 2}
+}
+@media(max-width:540px){
+  .grid,.grid.two,form,.form-grid{grid-template-columns:1fr}
+  .span2{grid-column:auto}header{align-items:flex-start;flex-direction:column}
+  table{font-size:12px}.recipe-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🍜 ร้านฉัน — Food Profit Manager V4.2</h1>
+    <p>ต้นทุนเฉลี่ย • สต๊อกอัตโนมัติ • ของเสีย • ย้อนรายการ • รายงาน • Backup</p>
+  </div>
+  <div class="tag" id="saveStatus">💾 กำลังโหลดข้อมูล</div>
+</header>
+
+<div class="wrap">
+<nav id="nav">
+  <button class="active" data-page="dashboard">📊 Dashboard</button>
+  <button data-page="ingredients">🥕 วัตถุดิบ</button>
+  <button data-page="menus">🍱 เมนูและสูตร</button>
+  <button data-page="sales">🛵 ยอดขาย</button>
+  <button data-page="waste">🗑️ ของเสีย/เบิกใช้</button>
+  <button data-page="expenses">💸 ค่าใช้จ่าย</button>
+  <button data-page="reports">📈 รายงาน</button>
+  <button data-page="settings">⚙️ ตั้งค่า/ข้อมูล</button>
+</nav>
+
+<section class="page active" id="dashboard">
+  <h2>ภาพรวมเดือนนี้</h2>
+  <div class="grid" id="metrics"></div>
+  <div class="grid two">
+    <div class="card"><h3>🎯 เป้าหมายกำไรสุทธิ</h3><div id="goalBox"></div></div>
+    <div class="card"><h3>⚠️ ของที่ต้องซื้อ</h3><div id="lowStock"></div></div>
+  </div>
+  <div class="card">
+    <h3>🏆 เมนูขายดีและกำไรต่อจาน</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>เมนู</th><th>ขายแล้ว</th><th>เงินรับจริง</th><th>กำไร/จาน</th><th>กำไรรวม</th></tr></thead>
+      <tbody id="dashboardMenuReport"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="page" id="ingredients">
+  <h2>วัตถุดิบและบรรจุภัณฑ์</h2>
+  <div class="card">
+    <h3>เพิ่มรายการใหม่</h3>
+    <form id="ingredientForm">
+      <div class="span2"><label>ชื่อรายการ</label><input required id="ingName" placeholder="เช่น หมูสับ, กล่องอาหาร"></div>
+      <div><label>หมวด</label><input id="ingCategory" placeholder="เนื้อสัตว์ / บรรจุภัณฑ์"></div>
+      <div><label>หน่วยฐาน</label><select id="ingUnit"><option value="g">กรัม (g)</option><option value="ml">มิลลิลิตร (ml)</option><option value="piece">ชิ้น / ใบ / ฟอง</option></select></div>
+      <div><label>จุดเตือนขั้นต่ำ</label><input id="ingMin" type="number" min="0" step="0.001" value="0"></div>
+      <div class="full"><button class="btn">+ เพิ่มวัตถุดิบ</button></div>
+    </form>
+    <p class="note">1 กิโลกรัม = 1,000 g และ 1 ลิตร = 1,000 ml</p>
+  </div>
+
+  <div class="card">
+    <h3>รับของเข้า</h3>
+    <form id="purchaseForm">
+      <div class="span2"><label>รายการ</label><select required id="purchaseIng"></select></div>
+      <div><label>จำนวนรับเข้า</label><input required id="purchaseQty" type="number" min="0.001" step="0.001"></div>
+      <div><label>หน่วยที่ซื้อ</label><select id="purchaseUnit"></select></div>
+      <div><label>ราคาที่จ่ายรวม</label><input required id="purchaseCost" type="number" min="0" step="0.01"></div>
+      <div><label>วันที่</label><input required id="purchaseDate" type="date"></div>
+      <div class="span2"><label>หมายเหตุ</label><input id="purchaseNote" placeholder="เช่น ซื้อจากตลาด"></div>
+      <div><label>&nbsp;</label><button class="btn green">รับของเข้า</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>ปรับยอดสต๊อก</h3>
+    <form id="adjustForm">
+      <div class="span2"><label>รายการ</label><select required id="adjustIng"></select></div>
+      <div><label>ยอดคงเหลือจริง</label><input required id="adjustStock" type="number" min="0" step="0.001"></div>
+      <div><label>ต้นทุนต่อหน่วยใหม่</label><input id="adjustCost" type="number" min="0" step="0.0001" placeholder="เว้นว่างเพื่อใช้ต้นทุนเดิม"></div>
+      <div><label>วันที่</label><input required id="adjustDate" type="date"></div>
+      <div class="span2"><label>เหตุผล</label><input required id="adjustNote" placeholder="เช่น ตรวจนับ หรือยอดเริ่มต้น"></div>
+      <div><label>&nbsp;</label><button class="btn">บันทึกการปรับยอด</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>รายการคงเหลือ</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>รายการ</th><th>หมวด</th><th>คงเหลือ</th><th>ต้นทุนเฉลี่ย</th><th>มูลค่าสต๊อก</th><th>สถานะ</th><th></th></tr></thead>
+      <tbody id="ingredientTable"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h3>ประวัติการซื้อ</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th><th>ยอดจ่าย</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr></thead>
+      <tbody id="purchaseTable"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h3>ประวัติความเคลื่อนไหวสต๊อก</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>ประเภท</th><th>เปลี่ยนแปลง</th><th>ต้นทุน/หน่วย</th><th>หมายเหตุ</th></tr></thead>
+      <tbody id="stockTable"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="page" id="menus">
+  <h2>เมนูอาหารและสูตร</h2>
+  <div class="card">
+    <h3>สร้าง/แก้ไขเมนู</h3>
+    <form id="menuForm">
+      <input type="hidden" id="menuId">
+      <div class="span2"><label>ชื่อเมนู</label><input required id="menuName" placeholder="เช่น กะเพราหมูสับ"></div>
+      <div><label>ราคาขายปกติ</label><input required id="menuPrice" type="number" min="0" step="0.01"></div>
+      <div><label>ค่าบรรจุภัณฑ์ต่อจาน</label><input id="menuPackaging" type="number" min="0" step="0.01" value="0"></div>
+      <div class="full">
+        <label>สูตรอาหารต่อ 1 จาน</label>
+        <div id="recipeRows"></div>
+        <button type="button" class="btn secondary" id="addRecipe">+ เพิ่มวัตถุดิบในสูตร</button>
+      </div>
+      <div class="full actions"><button class="btn">💾 บันทึกเมนู</button><button type="button" class="btn secondary" id="clearMenu">ล้างฟอร์ม</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h3>เมนูทั้งหมด</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>เมนู</th><th>ราคาขาย</th><th>ต้นทุนอาหาร</th><th>แพ็กเกจ</th><th>กำไรประมาณ</th><th></th></tr></thead>
+      <tbody id="menuTable"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="page" id="sales">
+  <h2>บันทึกยอดขาย</h2>
+  <div class="card">
+    <h3>เพิ่มรายการขาย — ตรวจและตัดสต๊อกทันที</h3>
+    <form id="saleForm">
+      <div><label>วันที่</label><input required id="saleDate" type="date"></div>
+      <div class="span2"><label>เมนู</label><select required id="saleMenu"></select></div>
+      <div><label>จำนวนจาน</label><input required id="saleQty" type="number" min="1" step="1" value="1"></div>
+      <div><label>ช่องทาง</label><select id="saleChannel"><option value="delivery">Delivery</option><option value="walkin">หน้าร้าน</option></select></div>
+      <div><label>จำนวนออเดอร์</label><input required id="saleOrders" type="number" min="1" step="1" value="1"></div>
+      <div><label>ราคาต่อจานจริง</label><input required id="salePrice" type="number" min="0" step="0.01"></div>
+      <div><label>ส่วนลดที่ร้านออก</label><input id="saleDiscount" type="number" min="0" step="0.01" value="0"></div>
+      <div class="span2"><label>หมายเหตุ</label><input id="saleNote" placeholder="เช่น โปรเปิดร้าน"></div>
+      <div class="full"><button class="btn green">+ บันทึกและตัดสต๊อก</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h3>ประวัติยอดขาย</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>วันที่</th><th>เมนู</th><th>จำนวน</th><th>ช่องทาง</th><th>เงินรับจริง</th><th>ต้นทุนรวม</th><th>กำไรจริง</th><th>สถานะ</th><th></th></tr></thead>
+      <tbody id="saleTable"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="page" id="waste">
+  <h2>ของเสีย หมดอายุ และเบิกใช้</h2>
+  <div class="card">
+    <form id="wasteForm">
+      <div><label>วันที่</label><input required id="wasteDate" type="date"></div>
+      <div class="span2"><label>วัตถุดิบ</label><select required id="wasteIng"></select></div>
+      <div><label>จำนวนในหน่วยฐาน</label><input required id="wasteQty" type="number" min="0.001" step="0.001"></div>
+      <div><label>สาเหตุ</label><select id="wasteReason"><option>ของเสีย</option><option>หมดอายุ</option><option>ใช้ส่วนตัว</option><option>ทดลองสินค้า</option><option>แจกฟรี</option><option>อื่น ๆ</option></select></div>
+      <div class="span2"><label>หมายเหตุ</label><input id="wasteNote"></div>
+      <div><label>&nbsp;</label><button class="btn danger">ตัดออกจากสต๊อก</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table>
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th><th>สาเหตุ</th><th>มูลค่า</th><th>หมายเหตุ</th><th>สถานะ</th><th></th></tr></thead>
+      <tbody id="wasteTable"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="page" id="expenses">
+  <h2>ค่าใช้จ่ายร้าน</h2>
+  <div class="card">
+    <form id="expenseForm">
+      <div><label>วันที่</label><input required id="expenseDate" type="date"></div>
+      <div><label>หมวด</label><select id="expenseType"><option>ค่าไฟ</option><option>ค่าแก๊ส</option><option>ค่าเช่า</option><option>ค่าแรง</option><option>การตลาด</option><option>ขนส่ง</option><option>อื่น ๆ</option></select></div>
+      <div class="span2"><label>รายละเอียด</label><input required id="expenseNote"></div>
+      <div><label>จำนวนเงิน</label><input required id="expenseAmount" type="number" min="0.01" step="0.01"></div>
+      <div><label>&nbsp;</label><button class="btn">+ บันทึกค่าใช้จ่าย</button></div>
+    </form>
+  </div>
+  <div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th>จำนวนเงิน</th><th></th></tr></thead>
+    <tbody id="expenseTable"></tbody>
+  </table></div></div>
+</section>
+
+<section class="page" id="reports">
+  <h2>รายงาน</h2>
+  <div class="card">
+    <div class="form-grid">
+      <div><label>วันที่เริ่ม</label><input type="date" id="reportFrom"></div>
+      <div><label>วันที่สิ้นสุด</label><input type="date" id="reportTo"></div>
+      <div><label>ช่องทาง</label><select id="reportChannel"><option value="">ทุกช่องทาง</option><option value="delivery">Delivery</option><option value="walkin">หน้าร้าน</option></select></div>
+      <div><label>&nbsp;</label><button class="btn" id="reportBtn">แสดงรายงาน</button></div>
+    </div>
+  </div>
+  <div class="grid" id="reportMetrics"></div>
+  <div class="card"><h3>รายงานแยกตามเมนู</h3><div class="table-wrap"><table>
+    <thead><tr><th>เมนู</th><th>จำนวน</th><th>เงินรับจริง</th><th>ต้นทุน</th><th>กำไร</th></tr></thead>
+    <tbody id="reportMenuTable"></tbody>
+  </table></div></div>
+  <div class="card"><h3>รายงานแยกตามช่องทาง</h3><div class="table-wrap"><table>
+    <thead><tr><th>ช่องทาง</th><th>จำนวน</th><th>เงินรับจริง</th><th>ต้นทุน</th><th>กำไร</th></tr></thead>
+    <tbody id="reportChannelTable"></tbody>
+  </table></div></div>
+</section>
+
+<section class="page" id="settings">
+  <h2>ตั้งค่าและจัดการข้อมูล</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>🛵 ค่าธรรมเนียม Delivery</h3>
+      <form id="settingForm">
+        <div><label>GP / Commission (%)</label><input id="setCommission" type="number" min="0" max="100" step="0.01"></div>
+        <div><label>VAT ของ GP (%)</label><input id="setVat" type="number" min="0" max="100" step="0.01"></div>
+        <div><label>ค่าธรรมเนียมคงที่/ออเดอร์</label><input id="setFixedFee" type="number" min="0" step="0.01"></div>
+        <div><label>ฐานคำนวณ GP</label><select id="setGpBase"><option value="afterDiscount">ยอดหลังหักส่วนลด</option><option value="gross">ยอดก่อนหักส่วนลด</option></select></div>
+        <div><label>เป้ากำไรสุทธิ/เดือน</label><input id="setGoal" type="number" min="0" step="0.01"></div>
+        <div class="full"><button class="btn">บันทึกการตั้งค่า</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h3>💾 Backup / Restore</h3>
+      <p class="note" id="versionInfo"></p>
+      <div class="actions">
+        <button class="btn green" id="backupBtn">ดาวน์โหลด Backup JSON</button>
+        <button class="btn secondary" id="csvBtn">Export รายงาน CSV</button>
+        <button class="btn blue" id="checkBtn">ตรวจสอบข้อมูล</button>
+      </div>
+      <hr>
+      <label>กู้คืนจากไฟล์ Backup JSON</label>
+      <input id="restoreFile" type="file" accept=".json,application/json">
+      <p class="note">ระบบจะดาวน์โหลด Backup ปัจจุบันก่อน Restore โดยอัตโนมัติ</p>
+      <button class="btn danger" id="resetBtn">ล้างข้อมูลทั้งหมด</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>ผลการตรวจสอบข้อมูล</h3>
+    <div id="integrityResult" class="note">ยังไม่ได้ตรวจสอบ</div>
+  </div>
+</section>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+const PREFERRED_KEY = "****_******_*******_**";
+const APP_VERSION = "4.2";
+const SCHEMA_VERSION = 5;
+const $ = id => document.getElementById(id);
+
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+const nowISO = () => new Date().toISOString();
+const num = (v,f=0) => Number.isFinite(Number(v)) ? Number(v) : f;
+const round = (v,d=6) => Number(num(v).toFixed(d));
+const money = v => new Intl.NumberFormat("th-TH",{style:"currency",currency:"THB"}).format(num(v));
+const esc = s => String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const makeId = () => crypto?.randomUUID ? crypto.randomUUID() : Date.now()+"_"+Math.random().toString(36).slice(2);
+
+function toast(text,bad=false){
+  const el=$("toast");
+  el.textContent=text;
+  el.style.background=bad?"#991b1b":"#0f172a";
+  el.style.display="block";
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>el.style.display="none",3000);
+}
+
+function looksLikeDB(x){
+  return x && typeof x==="object" && !Array.isArray(x) &&
+    Array.isArray(x.ingredients) && Array.isArray(x.menus) &&
+    (Array.isArray(x.sales) || Array.isArray(x.purchases));
+}
+
+function findStorageKey(){
+  try{
+    const preferred=localStorage.getItem(PREFERRED_KEY);
+    if(preferred && looksLikeDB(JSON.parse(preferred))) return PREFERRED_KEY;
+
+    const candidates=[];
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      try{
+        const parsed=JSON.parse(localStorage.getItem(key));
+        if(looksLikeDB(parsed)){
+          candidates.push({
+            key,
+            saved:String(parsed.metadata?.lastSavedAt||parsed.metadata?.createdAt||"")
+          });
+        }
+      }catch(_){}
+    }
+    candidates.sort((a,b)=>b.saved.localeCompare(a.saved));
+    return candidates[0]?.key || PREFERRED_KEY;
+  }catch(_){
+    return PREFERRED_KEY;
+  }
+}
+
+let KEY=findStorageKey();
+
+function defaultDB(){
+  return{
+    schemaVersion:SCHEMA_VERSION,
+    ingredients:[],menus:[],sales:[],expenses:[],purchases:[],
+    wastes:[],stockTransactions:[],
+    settings:{commission:30,vat:7,fixedFee:0,goal:20000,gpBase:"afterDiscount"},
+    metadata:{appVersion:APP_VERSION,migratedFrom:null,createdAt:nowISO(),lastSavedAt:null,revision:0}
+  };
+}
+
+function aggregateRecipe(recipe){
+  const map=new Map();
+  (Array.isArray(recipe)?recipe:[]).forEach(r=>{
+    const id=String(r?.ingId||"");
+    const q=Math.max(0,num(r?.qty));
+    if(id&&q>0) map.set(id,round((map.get(id)||0)+q));
+  });
+  return [...map].map(([ingId,qty])=>({ingId,qty}));
+}
+
+function migrate(raw){
+  if(!looksLikeDB(raw)) throw new Error("โครงสร้างข้อมูลไม่ถูกต้อง");
+  const out=defaultDB();
+  const source=num(raw.schemaVersion,3);
+
+  out.ingredients=(raw.ingredients||[]).map(x=>({
+    id:String(x?.id||makeId()),name:String(x?.name||"ไม่ระบุชื่อ"),
+    category:String(x?.category||""),
+    unit:["g","ml","piece"].includes(x?.unit)?x.unit:"piece",
+    minStock:Math.max(0,num(x?.minStock)),
+    stock:Math.max(0,num(x?.stock)),
+    avgCost:Math.max(0,num(x?.avgCost))
+  }));
+
+  out.menus=(raw.menus||[]).map(x=>({
+    id:String(x?.id||makeId()),name:String(x?.name||"ไม่ระบุชื่อ"),
+    price:Math.max(0,num(x?.price)),packaging:Math.max(0,num(x?.packaging)),
+    recipe:aggregateRecipe(x?.recipe)
+  }));
+
+  out.sales=(raw.sales||[]).map(x=>({
+    id:String(x?.id||makeId()),date:String(x?.date||localToday()),
+    menuId:String(x?.menuId||""),menuName:String(x?.menuName||"เมนูที่ถูกลบ"),
+    qty:Math.max(1,num(x?.qty,1)),orders:Math.max(1,num(x?.orders,1)),
+    channel:x?.channel==="walkin"?"walkin":"delivery",
+    price:Math.max(0,num(x?.price)),discount:Math.max(0,num(x?.discount)),
+    note:String(x?.note||""),gross:Math.max(0,num(x?.gross)),
+    after:Math.max(0,num(x?.after)),food:Math.max(0,num(x?.food)),
+    pack:Math.max(0,num(x?.pack)),platform:Math.max(0,num(x?.platform)),
+    net:num(x?.net),cost:Math.max(0,num(x?.cost)),profit:num(x?.profit),
+    returned:Boolean(x?.returned),returnedAt:String(x?.returnedAt||""),
+    deducted:(Array.isArray(x?.deducted)?x.deducted:[]).map(d=>({
+      ingId:String(d?.ingId||""),qty:Math.max(0,num(d?.qty)),
+      unitCost:Math.max(0,num(d?.unitCost))
+    })).filter(d=>d.ingId&&d.qty>0)
+  }));
+
+  out.expenses=(raw.expenses||[]).map(x=>({
+    id:String(x?.id||makeId()),date:String(x?.date||localToday()),
+    type:String(x?.type||"อื่น ๆ"),note:String(x?.note||""),
+    amount:Math.max(0,num(x?.amount))
+  }));
+
+  out.purchases=(raw.purchases||[]).map(x=>({
+    id:String(x?.id||makeId()),ingId:String(x?.ingId||""),
+    qty:Math.max(0,num(x?.qty)),cost:Math.max(0,num(x?.cost)),
+    unitCost:Math.max(0,num(x?.unitCost,num(x?.cost)/Math.max(num(x?.qty),1))),
+    date:String(x?.date||localToday()),note:String(x?.note||""),
+    cancelled:Boolean(x?.cancelled),cancelledAt:String(x?.cancelledAt||"")
+  }));
+
+  out.wastes=(Array.isArray(raw.wastes)?raw.wastes:[]).map(x=>({
+    id:String(x?.id||makeId()),date:String(x?.date||localToday()),
+    ingId:String(x?.ingId||""),qty:Math.max(0,num(x?.qty)),
+    unitCost:Math.max(0,num(x?.unitCost)),reason:String(x?.reason||"ของเสีย"),
+    note:String(x?.note||""),cancelled:Boolean(x?.cancelled),
+    cancelledAt:String(x?.cancelledAt||"")
+  }));
+
+  out.stockTransactions=(Array.isArray(raw.stockTransactions)?raw.stockTransactions:[]).map(t=>({
+    id:String(t?.id||makeId()),date:String(t?.date||localToday()),
+    createdAt:String(t?.createdAt||nowISO()),type:String(t?.type||"adjustment"),
+    ingId:String(t?.ingId||""),qty:num(t?.qty),
+    unitCost:Math.max(0,num(t?.unitCost)),refId:String(t?.refId||""),
+    note:String(t?.note||"")
+  })).filter(t=>t.ingId&&t.qty!==0);
+
+  out.settings={
+    commission:Math.min(100,Math.max(0,num(raw.settings?.commission,30))),
+    vat:Math.min(100,Math.max(0,num(raw.settings?.vat,7))),
+    fixedFee:Math.max(0,num(raw.settings?.fixedFee)),
+    goal:Math.max(0,num(raw.settings?.goal,20000)),
+    gpBase:raw.settings?.gpBase==="gross"?"gross":"afterDiscount"
+  };
+
+  out.metadata={
+    appVersion:APP_VERSION,
+    migratedFrom:source<SCHEMA_VERSION?source:(raw.metadata?.migratedFrom??null),
+    createdAt:String(raw.metadata?.createdAt||nowISO()),
+    lastSavedAt:raw.metadata?.lastSavedAt||null,
+    revision:num(raw.metadata?.revision)
+  };
+  return out;
+}
+
+let db;
+let loadWarning="";
+
+try{
+  const stored=localStorage.getItem(KEY);
+  db=stored?migrate(JSON.parse(stored)):defaultDB();
+}catch(err){
+  const brokenKey=KEY;
+  KEY=PREFERRED_KEY+"_recovery_"+Date.now();
+  db=defaultDB();
+  loadWarning=`พบฐานข้อมูลเดิมเสียหาย ระบบเก็บข้อมูลเดิมไว้ที่เดิมและเปิดฐานข้อมูลกู้คืนใหม่ โดยยังไม่ได้ลบข้อมูลเก่า`;
+  console.error("ฐานข้อมูลเสียหายที่ key:",brokenKey,err);
+}
+
+function persist(renderAfter=true){
+  db.schemaVersion=SCHEMA_VERSION;
+  db.metadata.appVersion=APP_VERSION;
+  db.metadata.lastSavedAt=nowISO();
+  db.metadata.revision=num(db.metadata.revision)+1;
+  try{
+    localStorage.setItem(KEY,JSON.stringify(db));
+    $("saveStatus").textContent="✓ บันทึกแล้ว "+new Date().toLocaleTimeString("th-TH");
+    if(renderAfter) render();
+    return true;
+  }catch(err){
+    alert("บันทึกไม่สำเร็จ พื้นที่จัดเก็บอาจเต็มหรือเบราว์เซอร์ปิดกั้น Local Storage");
+    return false;
+  }
+}
+
+const getIng=id=>db.ingredients.find(x=>x.id===id);
+const getMenu=id=>db.menus.find(x=>x.id===id);
+const unitLabel=u=>u==="piece"?"ชิ้น":u;
+
+function unitOptions(ing){
+  if(!ing)return `<option value="base">หน่วยฐาน</option>`;
+  if(ing.unit==="g")return `<option value="base">กรัม (g)</option><option value="kg">กิโลกรัม (kg)</option>`;
+  if(ing.unit==="ml")return `<option value="base">มิลลิลิตร (ml)</option><option value="L">ลิตร (L)</option>`;
+  return `<option value="base">ชิ้น / ใบ / ฟอง</option>`;
+}
+
+function toBaseQty(q,u,base){
+  q=num(q);
+  if(u==="kg"&&base==="g")return q*1000;
+  if(u==="L"&&base==="ml")return q*1000;
+  if(u==="base")return q;
+  throw new Error("หน่วยซื้อไม่ตรงกับวัตถุดิบ");
+}
+
+function menuCost(menu){
+  return aggregateRecipe(menu?.recipe).reduce((s,r)=>s+num(getIng(r.ingId)?.avgCost)*r.qty,0);
+}
+
+function platformFee(gross,after,channel,orders=1){
+  if(channel==="walkin")return 0;
+  const base=db.settings.gpBase==="gross"?gross:after;
+  const gp=base*num(db.settings.commission)/100;
+  return gp+gp*num(db.settings.vat)/100+num(db.settings.fixedFee)*Math.max(1,num(orders,1));
+}
+
+function calculateSale(menu,qty,price,discount,channel,orders){
+  const gross=price*qty;
+  const disc=Math.min(Math.max(0,discount),gross);
+  const after=gross-disc;
+  const food=menuCost(menu)*qty;
+  const pack=num(menu.packaging)*qty;
+  const platform=platformFee(gross,after,channel,orders);
+  return{
+    gross:round(gross),after:round(after),food:round(food),pack:round(pack),
+    platform:round(platform),net:round(after-platform),
+    cost:round(food+pack+platform),profit:round(after-platform-food-pack)
+  };
+}
+
+function addStockTransaction(data){
+  db.stockTransactions.push({
+    id:makeId(),date:data.date||localToday(),createdAt:nowISO(),
+    type:data.type,ingId:data.ingId,qty:round(data.qty),
+    unitCost:Math.max(0,round(data.unitCost)),refId:data.refId||"",
+    note:data.note||""
+  });
+}
+
+function aggregateDeductions(items){
+  const map=new Map();
+  (items||[]).forEach(d=>{
+    const id=String(d.ingId||"");
+    if(!id)return;
+    const x=map.get(id)||{ingId:id,qty:0,value:0};
+    x.qty+=num(d.qty);x.value+=num(d.qty)*num(d.unitCost);map.set(id,x);
+  });
+  return [...map.values()].map(x=>({
+    ingId:x.ingId,qty:round(x.qty),unitCost:x.qty?round(x.value/x.qty):0
+  }));
+}
+
+const activeSales=()=>db.sales.filter(x=>!x.returned);
+const monthMatch=d=>String(d||"").slice(0,7)===localToday().slice(0,7);
+const inRange=(date,from,to)=>String(date)>=from&&String(date)<=to;
+
+function typeLabel(t){
+  return({
+    purchase:"รับของเข้า",purchase_cancel:"ยกเลิกรับเข้า",
+    sale:"ขายออก",sale_return:"คืนยอดขาย",
+    waste:"ของเสีย/เบิกใช้",waste_cancel:"คืนของเสีย",
+    adjustment:"ปรับยอด"
+  })[t]||t;
+}
+
+function recipeRow(recipe={}){
+  const options=`<option value="">-- เลือก --</option>`+db.ingredients.map(x=>
+    `<option value="${esc(x.id)}" ${recipe.ingId===x.id?"selected":""}>${esc(x.name)} (${unitLabel(x.unit)})</option>`
+  ).join("");
+  return `<div class="recipe-row">
+    <select class="r-ing">${options}</select>
+    <input class="r-qty" type="number" min="0.001" step="0.001" value="${recipe.qty||""}" placeholder="ปริมาณ">
+    <span class="tag r-unit">${recipe.ingId?unitLabel(getIng(recipe.ingId)?.unit):"หน่วย"}</span>
+    <button type="button" class="btn danger" onclick="this.parentElement.remove()">×</button>
+  </div>`;
+}
+
+function renderSelects(){
+  const options=`<option value="">-- เลือก --</option>`+db.ingredients.map(x=>
+    `<option value="${esc(x.id)}">${esc(x.name)} (${unitLabel(x.unit)})</option>`
+  ).join("");
+  ["purchaseIng","adjustIng","wasteIng"].forEach(id=>{
+    const old=$(id).value;$(id).innerHTML=options;
+    if(db.ingredients.some(x=>x.id===old))$(id).value=old;
+  });
+  const oldMenu=$("saleMenu").value;
+  $("saleMenu").innerHTML=`<option value="">-- เลือกเมนู --</option>`+db.menus.map(x=>
+    `<option value="${esc(x.id)}">${esc(x.name)} — ${money(x.price)}</option>`
+  ).join("");
+  if(db.menus.some(x=>x.id===oldMenu))$("saleMenu").value=oldMenu;
+  $("purchaseUnit").innerHTML=unitOptions(getIng($("purchaseIng").value));
+}
+
+function renderIngredients(){
+  $("ingredientTable").innerHTML=db.ingredients.length?db.ingredients.map(x=>{
+    const low=x.stock<=x.minStock;
+    return `<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.category||"-")}</td>
+      <td>${round(x.stock,3).toLocaleString("th-TH")} ${unitLabel(x.unit)}</td>
+      <td>${money(x.avgCost)}</td><td>${money(x.stock*x.avgCost)}</td>
+      <td class="${low?"bad":"ok"}">${low?"⚠️ ใกล้หมด":"✓ ปกติ"}</td>
+      <td><button class="btn danger" onclick="deleteIngredient('${esc(x.id)}')">ลบ</button></td></tr>`;
+  }).join(""):`<tr><td colspan="7" class="empty">ยังไม่มีวัตถุดิบ</td></tr>`;
+}
+
+function renderPurchases(){
+  const rows=db.purchases.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("purchaseTable").innerHTML=rows.length?rows.map(p=>{
+    const ing=getIng(p.ingId);
+    return `<tr><td>${esc(p.date)}</td><td>${esc(ing?.name||"รายการที่ถูกลบ")}</td>
+      <td>${round(p.qty,3).toLocaleString("th-TH")} ${unitLabel(ing?.unit||"")}</td>
+      <td>${money(p.cost)}</td><td>${esc(p.note||"-")}</td>
+      <td><span class="tag ${p.cancelled?"red":"green"}">${p.cancelled?"ยกเลิกแล้ว":"สมบูรณ์"}</span></td>
+      <td>${p.cancelled?"":`<button class="btn danger" onclick="cancelPurchase('${esc(p.id)}')">ยกเลิก</button>`}</td></tr>`;
+  }).join(""):`<tr><td colspan="7" class="empty">ยังไม่มีประวัติการซื้อ</td></tr>`;
+}
+
+function renderStockTransactions(){
+  const rows=db.stockTransactions.slice().sort((a,b)=>
+    String(b.date).localeCompare(String(a.date))||String(b.createdAt).localeCompare(String(a.createdAt))
+  ).slice(0,500);
+  $("stockTable").innerHTML=rows.length?rows.map(t=>{
+    const ing=getIng(t.ingId);
+    return `<tr><td>${esc(t.date)}</td><td>${esc(ing?.name||"รายการที่ถูกลบ")}</td>
+      <td>${esc(typeLabel(t.type))}</td>
+      <td class="${t.qty>0?"ok":"bad"}">${t.qty>0?"+":""}${round(t.qty,3).toLocaleString("th-TH")} ${unitLabel(ing?.unit||"")}</td>
+      <td>${money(t.unitCost)}</td><td>${esc(t.note||"-")}</td></tr>`;
+  }).join(""):`<tr><td colspan="6" class="empty">ยังไม่มีประวัติสต๊อก</td></tr>`;
+}
+
+function renderMenus(){
+  $("menuTable").innerHTML=db.menus.length?db.menus.map(m=>{
+    const food=menuCost(m);
+    const estimate=calculateSale(m,1,m.price,0,"delivery",1).profit;
+    return `<tr><td><b>${esc(m.name)}</b></td><td>${money(m.price)}</td>
+      <td>${money(food)}</td><td>${money(m.packaging)}</td>
+      <td class="${estimate<0?"bad":"ok"}">${money(estimate)}</td>
+      <td class="actions"><button class="btn secondary" onclick="editMenu('${esc(m.id)}')">แก้ไข</button>
+      <button class="btn danger" onclick="deleteMenu('${esc(m.id)}')">ลบ</button></td></tr>`;
+  }).join(""):`<tr><td colspan="6" class="empty">ยังไม่มีเมนู</td></tr>`;
+}
+
+function renderSales(){
+  const rows=db.sales.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("saleTable").innerHTML=rows.length?rows.map(s=>`<tr>
+    <td>${esc(s.date)}</td><td>${esc(s.menuName)}</td><td>${num(s.qty).toLocaleString("th-TH")}</td>
+    <td>${s.channel==="walkin"?"หน้าร้าน":"Delivery"}</td><td>${money(s.net)}</td>
+    <td>${money(s.cost)}</td><td class="${s.profit<0?"bad":"ok"}">${money(s.profit)}</td>
+    <td><span class="tag ${s.returned?"red":"green"}">${s.returned?"คืนแล้ว":"สมบูรณ์"}</span></td>
+    <td>${s.returned?"":`<button class="btn danger" onclick="returnSale('${esc(s.id)}')">คืน/ยกเลิก</button>`}</td>
+  </tr>`).join(""):`<tr><td colspan="9" class="empty">ยังไม่มีรายการขาย</td></tr>`;
+}
+
+function renderWastes(){
+  const rows=db.wastes.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("wasteTable").innerHTML=rows.length?rows.map(w=>{
+    const ing=getIng(w.ingId);
+    return `<tr><td>${esc(w.date)}</td><td>${esc(ing?.name||"รายการที่ถูกลบ")}</td>
+      <td>${round(w.qty,3).toLocaleString("th-TH")} ${unitLabel(ing?.unit||"")}</td>
+      <td>${esc(w.reason)}</td><td>${money(w.qty*w.unitCost)}</td><td>${esc(w.note||"-")}</td>
+      <td><span class="tag ${w.cancelled?"red":"green"}">${w.cancelled?"ยกเลิกแล้ว":"สมบูรณ์"}</span></td>
+      <td>${w.cancelled?"":`<button class="btn danger" onclick="cancelWaste('${esc(w.id)}')">ยกเลิก</button>`}</td></tr>`;
+  }).join(""):`<tr><td colspan="8" class="empty">ยังไม่มีรายการ</td></tr>`;
+}
+
+function renderExpenses(){
+  const rows=db.expenses.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $("expenseTable").innerHTML=rows.length?rows.map(e=>`<tr>
+    <td>${esc(e.date)}</td><td>${esc(e.type)}</td><td>${esc(e.note)}</td>
+    <td>${money(e.amount)}</td><td><button class="btn danger" onclick="deleteExpense('${esc(e.id)}')">ลบ</button></td>
+  </tr>`).join(""):`<tr><td colspan="5" class="empty">ยังไม่มีค่าใช้จ่าย</td></tr>`;
+}
+
+function renderDashboard(){
+  const sales=activeSales().filter(x=>monthMatch(x.date));
+  const expenses=db.expenses.filter(x=>monthMatch(x.date));
+  const revenue=sales.reduce((a,x)=>a+num(x.net),0);
+  const grossProfit=sales.reduce((a,x)=>a+num(x.profit),0);
+  const expenseTotal=expenses.reduce((a,x)=>a+num(x.amount),0);
+  const wasteValue=db.wastes.filter(x=>!x.cancelled&&monthMatch(x.date)).reduce((a,x)=>a+x.qty*x.unitCost,0);
+  const netProfit=grossProfit-expenseTotal;
+
+  $("metrics").innerHTML=[
+    ["เงินรับจริง",money(revenue)],["กำไรจากการขาย",money(grossProfit)],
+    ["ค่าใช้จ่ายร้าน",money(expenseTotal)],["กำไรสุทธิ",money(netProfit)],
+    ["มูลค่าสต๊อก",money(db.ingredients.reduce((a,x)=>a+x.stock*x.avgCost,0))],
+    ["ของเสีย/เบิกใช้",money(wasteValue)]
+  ].map(x=>`<div class="card metric"><small>${x[0]}</small><b>${x[1]}</b></div>`).join("");
+
+  const goal=num(db.settings.goal);
+  const percent=goal>0?Math.max(0,netProfit/goal*100):0;
+  const d=new Date(),days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const left=Math.max(0,days-d.getDate()),need=Math.max(0,goal-netProfit);
+  $("goalBox").innerHTML=`<b style="font-size:24px">${money(netProfit)} / ${money(goal)}</b>
+    <p class="note">ทำได้ ${percent.toFixed(1)}% · เหลือ ${money(need)}${left?` · ต้องเพิ่มเฉลี่ย ${money(need/left)}/วัน`:""}</p>
+    <progress max="100" value="${Math.min(100,percent)}"></progress>`;
+
+  const low=db.ingredients.filter(x=>x.stock<=x.minStock);
+  $("lowStock").innerHTML=low.length?low.map(x=>`<div class="alert">⚠️ <b>${esc(x.name)}</b> เหลือ ${round(x.stock,3).toLocaleString("th-TH")} ${unitLabel(x.unit)} · แนะนำซื้อ ${round(Math.max(0,x.minStock*2-x.stock),3).toLocaleString("th-TH")} ${unitLabel(x.unit)}</div>`).join(""):`<p class="ok">✓ สต๊อกทั้งหมดอยู่ในระดับปกติ</p>`;
+
+  const map=new Map();
+  sales.forEach(s=>{
+    const key=s.menuId||s.menuName;
+    const x=map.get(key)||{name:s.menuName,qty:0,net:0,profit:0};
+    x.qty+=num(s.qty);x.net+=num(s.net);x.profit+=num(s.profit);map.set(key,x);
+  });
+  $("dashboardMenuReport").innerHTML=map.size?[...map.values()].sort((a,b)=>b.profit-a.profit).map(x=>
+    `<tr><td>${esc(x.name)}</td><td>${x.qty.toLocaleString("th-TH")}</td><td>${money(x.net)}</td><td>${money(x.qty?x.profit/x.qty:0)}</td><td>${money(x.profit)}</td></tr>`
+  ).join(""):`<tr><td colspan="5" class="empty">ยังไม่มีข้อมูลยอดขายเดือนนี้</td></tr>`;
+}
+
+function filteredReportSales(){
+  const from=$("reportFrom").value||"0000-01-01";
+  const to=$("reportTo").value||"9999-12-31";
+  const channel=$("reportChannel").value;
+  return activeSales().filter(s=>inRange(s.date,from,to)&&(!channel||s.channel===channel));
+}
+
+function renderReports(){
+  const sales=filteredReportSales();
+  const from=$("reportFrom").value||"0000-01-01",to=$("reportTo").value||"9999-12-31";
+  const expenses=db.expenses.filter(e=>inRange(e.date,from,to));
+  const revenue=sales.reduce((a,x)=>a+x.net,0);
+  const profit=sales.reduce((a,x)=>a+x.profit,0);
+  const exp=expenses.reduce((a,x)=>a+x.amount,0);
+  $("reportMetrics").innerHTML=[
+    ["เงินรับจริง",money(revenue)],["กำไรจากการขาย",money(profit)],
+    ["ค่าใช้จ่ายร้าน",money(exp)],["กำไรสุทธิ",money(profit-exp)]
+  ].map(x=>`<div class="card metric"><small>${x[0]}</small><b>${x[1]}</b></div>`).join("");
+
+  function group(keyFn){
+    const map=new Map();
+    sales.forEach(s=>{
+      const key=keyFn(s),x=map.get(key)||{qty:0,net:0,cost:0,profit:0};
+      x.qty+=s.qty;x.net+=s.net;x.cost+=s.cost;x.profit+=s.profit;map.set(key,x);
+    });
+    return map;
+  }
+
+  const menuMap=group(s=>s.menuName);
+  $("reportMenuTable").innerHTML=menuMap.size?[...menuMap].map(([k,x])=>
+    `<tr><td>${esc(k)}</td><td>${x.qty.toLocaleString("th-TH")}</td><td>${money(x.net)}</td><td>${money(x.cost)}</td><td>${money(x.profit)}</td></tr>`
+  ).join(""):`<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>`;
+
+  const channelMap=group(s=>s.channel==="walkin"?"หน้าร้าน":"Delivery");
+  $("reportChannelTable").innerHTML=channelMap.size?[...channelMap].map(([k,x])=>
+    `<tr><td>${k}</td><td>${x.qty.toLocaleString("th-TH")}</td><td>${money(x.net)}</td><td>${money(x.cost)}</td><td>${money(x.profit)}</td></tr>`
+  ).join(""):`<tr><td colspan="5" class="empty">ไม่มีข้อมูล</td></tr>`;
+}
+
+function renderSettings(){
+  $("setCommission").value=db.settings.commission;
+  $("setVat").value=db.settings.vat;
+  $("setFixedFee").value=db.settings.fixedFee;
+  $("setGoal").value=db.settings.goal;
+  $("setGpBase").value=db.settings.gpBase;
+  $("versionInfo").textContent=`เวอร์ชัน ${APP_VERSION} · Schema ${SCHEMA_VERSION} · บันทึกล่าสุด ${db.metadata.lastSavedAt?new Date(db.metadata.lastSavedAt).toLocaleString("th-TH"):"ยังไม่มี"}`;
+}
+
+function render(){
+  renderSelects();renderIngredients();renderPurchases();renderStockTransactions();
+  renderMenus();renderSales();renderWastes();renderExpenses();
+  renderDashboard();renderReports();renderSettings();
+}
+
+function deleteIngredient(id){
+  if(db.menus.some(m=>m.recipe.some(r=>r.ingId===id)))return alert("ลบไม่ได้: รายการนี้ถูกใช้ในสูตรอาหาร");
+  if(db.stockTransactions.some(t=>t.ingId===id)||db.purchases.some(p=>p.ingId===id)||db.wastes.some(w=>w.ingId===id))return alert("ลบไม่ได้: รายการนี้มีประวัติสต๊อก");
+  if(confirm("ยืนยันลบวัตถุดิบนี้?")){db.ingredients=db.ingredients.filter(x=>x.id!==id);persist();}
+}
+
+function deleteMenu(id){
+  const hasSales=db.sales.some(s=>s.menuId===id);
+  if(confirm(hasSales?"เมนูนี้มีประวัติยอดขาย ประวัติเดิมจะยังอยู่ ยืนยันลบเมนู?":"ยืนยันลบเมนูนี้?")){
+    db.menus=db.menus.filter(x=>x.id!==id);persist();
+  }
+}
+
+function deleteExpense(id){
+  if(confirm("ยืนยันลบค่าใช้จ่ายนี้?")){db.expenses=db.expenses.filter(x=>x.id!==id);persist();}
+}
+
+function cancelPurchase(id){
+  const p=db.purchases.find(x=>x.id===id);
+  if(!p||p.cancelled)return alert("รายการนี้ถูกยกเลิกแล้ว");
+  const ing=getIng(p.ingId);
+  if(!ing)return alert("ไม่พบวัตถุดิบของรายการนี้");
+  if(ing.stock+1e-7<p.qty)return alert("ยกเลิกไม่ได้ เพราะสต๊อกคงเหลือน้อยกว่าจำนวนที่รับเข้า");
+  const currentValue=ing.stock*ing.avgCost;
+  if(currentValue+0.01<p.cost)return alert("ยกเลิกไม่ได้ เพราะมูลค่าสต๊อกปัจจุบันไม่พอสำหรับย้อนรายการนี้");
+
+  if(!confirm("ยืนยันยกเลิกรายการซื้อและย้อนจำนวนกับมูลค่าสต๊อก?"))return;
+  const newStock=round(ing.stock-p.qty);
+  const newValue=Math.max(0,currentValue-p.cost);
+  ing.stock=newStock;
+  ing.avgCost=newStock>0?round(newValue/newStock):0;
+  p.cancelled=true;p.cancelledAt=nowISO();
+  addStockTransaction({date:localToday(),type:"purchase_cancel",ingId:ing.id,qty:-p.qty,unitCost:p.unitCost,refId:p.id,note:`ยกเลิกรับเข้า ${p.date}`});
+  persist();toast("ยกเลิกรายการซื้อแล้ว");
+}
+
+function returnSale(id){
+  const sale=db.sales.find(x=>x.id===id);
+  if(!sale||sale.returned)return alert("รายการนี้ถูกคืนแล้ว");
+  if(!confirm("ยืนยันยกเลิกยอดขายและคืนวัตถุดิบเข้าสต๊อก?"))return;
+
+  aggregateDeductions(sale.deducted).forEach(d=>{
+    const ing=getIng(d.ingId);if(!ing)return;
+    const oldValue=ing.stock*ing.avgCost;
+    const newStock=ing.stock+d.qty;
+    ing.stock=round(newStock);
+    ing.avgCost=newStock>0?round((oldValue+d.qty*d.unitCost)/newStock):0;
+    addStockTransaction({date:localToday(),type:"sale_return",ingId:ing.id,qty:d.qty,unitCost:d.unitCost,refId:sale.id,note:`คืนยอดขาย ${sale.menuName} วันที่ ${sale.date}`});
+  });
+
+  sale.returned=true;sale.returnedAt=nowISO();
+  persist();toast("คืนรายการขายและสต๊อกแล้ว");
+}
+
+function cancelWaste(id){
+  const w=db.wastes.find(x=>x.id===id);
+  if(!w||w.cancelled)return alert("รายการนี้ถูกยกเลิกแล้ว");
+  const ing=getIng(w.ingId);
+  if(!ing)return alert("ไม่พบวัตถุดิบ");
+  if(!confirm("ยืนยันยกเลิกและคืนจำนวนเข้าสต๊อก?"))return;
+
+  const value=ing.stock*ing.avgCost+w.qty*w.unitCost;
+  ing.stock=round(ing.stock+w.qty);
+  ing.avgCost=ing.stock>0?round(value/ing.stock):0;
+  w.cancelled=true;w.cancelledAt=nowISO();
+  addStockTransaction({date:localToday(),type:"waste_cancel",ingId:ing.id,qty:w.qty,unitCost:w.unitCost,refId:w.id,note:`ยกเลิก ${w.reason}`});
+  persist();toast("คืนสต๊อกแล้ว");
+}
+
+function editMenu(id){
+  const m=getMenu(id);if(!m)return;
+  $("menuId").value=m.id;$("menuName").value=m.name;$("menuPrice").value=m.price;
+  $("menuPackaging").value=m.packaging;
+  $("recipeRows").innerHTML=m.recipe.map(recipeRow).join("");
+  document.querySelector('[data-page="menus"]').click();
+  $("menuForm").scrollIntoView({behavior:"smooth"});
+}
+
+document.querySelectorAll("#nav button").forEach(button=>{
+  button.onclick=()=>{
+    document.querySelectorAll("#nav button,.page").forEach(x=>x.classList.remove("active"));
+    button.classList.add("active");$(button.dataset.page).classList.add("active");
+  };
+});
+
+$("ingredientForm").onsubmit=e=>{
+  e.preventDefault();
+  const name=$("ingName").value.trim();
+  if(db.ingredients.some(x=>x.name.trim().toLowerCase()===name.toLowerCase()))return alert("มีชื่อรายการนี้อยู่แล้ว");
+  db.ingredients.push({id:makeId(),name,category:$("ingCategory").value.trim(),unit:$("ingUnit").value,minStock:Math.max(0,num($("ingMin").value)),stock:0,avgCost:0});
+  e.target.reset();$("ingMin").value=0;persist();
+};
+
+$("purchaseIng").onchange=()=>{$("purchaseUnit").innerHTML=unitOptions(getIng($("purchaseIng").value));};
+
+$("purchaseForm").onsubmit=e=>{
+  e.preventDefault();
+  const ing=getIng($("purchaseIng").value);
+  if(!ing)return alert("กรุณาเลือกวัตถุดิบ");
+  try{
+    const qty=toBaseQty($("purchaseQty").value,$("purchaseUnit").value,ing.unit);
+    const cost=num($("purchaseCost").value,-1);
+    if(qty<=0||cost<0)throw new Error("จำนวนหรือราคาไม่ถูกต้อง");
+    const oldValue=ing.stock*ing.avgCost,newStock=ing.stock+qty;
+    ing.stock=round(newStock);ing.avgCost=round((oldValue+cost)/newStock);
+    const p={id:makeId(),ingId:ing.id,qty:round(qty),cost:round(cost),unitCost:round(cost/qty),date:$("purchaseDate").value,note:$("purchaseNote").value.trim(),cancelled:false,cancelledAt:""};
+    db.purchases.push(p);
+    addStockTransaction({date:p.date,type:"purchase",ingId:ing.id,qty,unitCost:p.unitCost,refId:p.id,note:p.note||"รับของเข้า"});
+    e.target.reset();$("purchaseDate").value=localToday();$("purchaseUnit").innerHTML=unitOptions(null);persist();
+  }catch(err){alert(err.message||"รับของเข้าไม่สำเร็จ");}
+};
+
+$("adjustIng").onchange=()=>{
+  const ing=getIng($("adjustIng").value);
+  if(ing){$("adjustStock").value=round(ing.stock,3);$("adjustCost").placeholder=`ต้นทุนเดิม ${money(ing.avgCost)}`;}
+};
+
+$("adjustForm").onsubmit=e=>{
+  e.preventDefault();
+  const ing=getIng($("adjustIng").value);
+  if(!ing)return alert("กรุณาเลือกวัตถุดิบ");
+  const target=num($("adjustStock").value,-1);
+  if(target<0)return alert("ยอดคงเหลือต้องไม่ต่ำกว่า 0");
+  const difference=round(target-ing.stock);
+  const input=$("adjustCost").value.trim();
+  const cost=input===""?ing.avgCost:Math.max(0,num(input));
+  if(difference===0&&round(cost)===round(ing.avgCost))return alert("ข้อมูลไม่มีการเปลี่ยนแปลง");
+  ing.stock=round(target);ing.avgCost=round(cost);
+  if(difference!==0)addStockTransaction({date:$("adjustDate").value,type:"adjustment",ingId:ing.id,qty:difference,unitCost:cost,note:$("adjustNote").value.trim()});
+  e.target.reset();$("adjustDate").value=localToday();persist();
+};
+
+$("addRecipe").onclick=()=>{
+  if(!db.ingredients.length)return alert("กรุณาเพิ่มวัตถุดิบก่อน");
+  $("recipeRows").insertAdjacentHTML("beforeend",recipeRow());
+};
+
+$("recipeRows").onchange=e=>{
+  if(e.target.classList.contains("r-ing"))e.target.parentElement.querySelector(".r-unit").textContent=unitLabel(getIng(e.target.value)?.unit||"หน่วย");
+};
+
+$("clearMenu").onclick=()=>{
+  $("menuForm").reset();$("menuId").value="";$("menuPackaging").value=0;$("recipeRows").innerHTML="";
+};
+
+$("menuForm").onsubmit=e=>{
+  e.preventDefault();
+  const recipe=aggregateRecipe([...document.querySelectorAll("#recipeRows .recipe-row")].map(row=>({
+    ingId:row.querySelector(".r-ing").value,qty:num(row.querySelector(".r-qty").value)
+  })));
+  if(!recipe.length)return alert("กรุณาเพิ่มวัตถุดิบอย่างน้อย 1 รายการ");
+  const name=$("menuName").value.trim(),id=$("menuId").value;
+  if(db.menus.some(x=>x.id!==id&&x.name.trim().toLowerCase()===name.toLowerCase()))return alert("มีชื่อเมนูนี้อยู่แล้ว");
+  const menu={id:id||makeId(),name,price:Math.max(0,num($("menuPrice").value)),packaging:Math.max(0,num($("menuPackaging").value)),recipe};
+  const index=db.menus.findIndex(x=>x.id===menu.id);
+  if(index>=0)db.menus[index]=menu;else db.menus.push(menu);
+  $("clearMenu").click();persist();
+};
+
+$("saleMenu").onchange=()=>{const m=getMenu($("saleMenu").value);if(m)$("salePrice").value=m.price;};
+$("saleChannel").onchange=()=>{
+  const walkin=$("saleChannel").value==="walkin";
+  $("saleOrders").disabled=walkin;if(walkin)$("saleOrders").value=1;
+};
+
+$("saleForm").onsubmit=e=>{
+  e.preventDefault();
+  const menu=getMenu($("saleMenu").value),qty=Math.floor(num($("saleQty").value));
+  const orders=Math.floor(num($("saleOrders").value,1)),price=num($("salePrice").value),discount=num($("saleDiscount").value);
+  if(!menu)return alert("กรุณาเลือกเมนู");
+  if(qty<1||orders<1||price<0||discount<0)return alert("ข้อมูลยอดขายไม่ถูกต้อง");
+
+  const required=aggregateRecipe(menu.recipe).map(r=>({ingId:r.ingId,qty:round(r.qty*qty)}));
+  const missing=required.filter(r=>!getIng(r.ingId)||getIng(r.ingId).stock+1e-7<r.qty);
+  if(missing.length)return alert("สต๊อกไม่พอ:\n"+missing.map(r=>`- ${getIng(r.ingId)?.name||"วัตถุดิบที่หาย"} ต้องใช้ ${r.qty} แต่มี ${getIng(r.ingId)?.stock||0}`).join("\n"));
+
+  const calculation=calculateSale(menu,qty,price,discount,$("saleChannel").value,orders);
+  const saleId=makeId();
+  const deducted=required.map(r=>{
+    const ing=getIng(r.ingId),unitCost=ing.avgCost;
+    ing.stock=round(ing.stock-r.qty);
+    addStockTransaction({date:$("saleDate").value,type:"sale",ingId:ing.id,qty:-r.qty,unitCost,refId:saleId,note:`ขาย ${menu.name} ${qty} จาน`});
+    return{ingId:ing.id,qty:r.qty,unitCost:round(unitCost)};
+  });
+
+  db.sales.push({id:saleId,date:$("saleDate").value,menuId:menu.id,menuName:menu.name,qty,orders,channel:$("saleChannel").value,price,discount:Math.min(discount,price*qty),note:$("saleNote").value.trim(),...calculation,deducted,returned:false,returnedAt:""});
+  e.target.reset();$("saleDate").value=localToday();$("saleQty").value=1;$("saleOrders").value=1;$("saleDiscount").value=0;$("saleOrders").disabled=false;persist();
+};
+
+$("wasteForm").onsubmit=e=>{
+  e.preventDefault();
+  const ing=getIng($("wasteIng").value),qty=num($("wasteQty").value);
+  if(!ing)return alert("กรุณาเลือกวัตถุดิบ");
+  if(qty<=0||ing.stock+1e-7<qty)return alert("จำนวนไม่ถูกต้องหรือสต๊อกไม่เพียงพอ");
+  const w={id:makeId(),date:$("wasteDate").value,ingId:ing.id,qty:round(qty),unitCost:round(ing.avgCost),reason:$("wasteReason").value,note:$("wasteNote").value.trim(),cancelled:false,cancelledAt:""};
+  ing.stock=round(ing.stock-qty);db.wastes.push(w);
+  addStockTransaction({date:w.date,type:"waste",ingId:ing.id,qty:-qty,unitCost:w.unitCost,refId:w.id,note:`${w.reason}${w.note?": "+w.note:""}`});
+  e.target.reset();$("wasteDate").value=localToday();persist();
+};
+
+$("expenseForm").onsubmit=e=>{
+  e.preventDefault();
+  db.expenses.push({id:makeId(),date:$("expenseDate").value,type:$("expenseType").value,note:$("expenseNote").value.trim(),amount:Math.max(0,num($("expenseAmount").value))});
+  e.target.reset();$("expenseDate").value=localToday();persist();
+};
+
+$("settingForm").onsubmit=e=>{
+  e.preventDefault();
+  db.settings={
+    commission:Math.min(100,Math.max(0,num($("setCommission").value))),
+    vat:Math.min(100,Math.max(0,num($("setVat").value))),
+    fixedFee:Math.max(0,num($("setFixedFee").value)),
+    goal:Math.max(0,num($("setGoal").value)),
+    gpBase:$("setGpBase").value==="gross"?"gross":"afterDiscount"
+  };
+  persist();toast("บันทึกการตั้งค่าแล้ว");
+};
+
+$("reportBtn").onclick=renderReports;
+
+function download(name,data,type){
+  const url=URL.createObjectURL(new Blob([data],{type}));
+  const a=document.createElement("a");a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function backup(auto=false){
+  persist(false);
+  download(`food-profit-v42-${auto?"auto-":""}backup-${localToday()}.json`,JSON.stringify(db,null,2),"application/json");
+}
+
+$("backupBtn").onclick=()=>{backup();toast("ดาวน์โหลด Backup แล้ว");};
+
+function safeCsv(v){
+  let text=String(v??"");
+  if(/^[=+\-@]/.test(text))text="'"+text;
+  return `"${text.replace(/"/g,'""')}"`;
+}
+
+$("csvBtn").onclick=()=>{
+  const rows=[["วันที่","เมนู","จำนวนจาน","ออเดอร์","ช่องทาง","ยอดก่อนส่วนลด","ส่วนลด","ค่าธรรมเนียม","เงินรับจริง","ต้นทุนอาหาร","บรรจุภัณฑ์","กำไร"]];
+  filteredReportSales().forEach(s=>rows.push([s.date,s.menuName,s.qty,s.orders,s.channel==="walkin"?"หน้าร้าน":"Delivery",s.gross,s.discount,s.platform,s.net,s.food,s.pack,s.profit]));
+  download("รายงานยอดขาย-"+localToday()+".csv","\uFEFF"+rows.map(r=>r.map(safeCsv).join(",")).join("\r\n"),"text/csv;charset=utf-8");
+};
+
+$("restoreFile").onchange=e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const restored=migrate(JSON.parse(String(reader.result)));
+      const summary=`พบวัตถุดิบ ${restored.ingredients.length} รายการ\nเมนู ${restored.menus.length} รายการ\nยอดขาย ${restored.sales.length} รายการ\n\nระบบจะ Backup ข้อมูลปัจจุบันก่อนเขียนทับ ยืนยันหรือไม่?`;
+      if(confirm(summary)){
+        backup(true);db=restored;persist();alert("กู้คืนข้อมูลเรียบร้อย");
+      }
+    }catch(err){alert("ไฟล์ Backup ไม่ถูกต้องหรือข้อมูลเสียหาย");}
+    finally{e.target.value="";}
+  };
+  reader.onerror=()=>{alert("ไม่สามารถอ่านไฟล์ได้");e.target.value="";};
+  reader.readAsText(file);
+};
+
+$("resetBtn").onclick=()=>{
+  if(!confirm("ยืนยันล้างข้อมูลทั้งหมด? ระบบจะดาวน์โหลด Backup ก่อน"))return;
+  const typed=prompt('พิมพ์คำว่า "ล้างข้อมูล" เพื่อยืนยัน');
+  if(typed!=="ล้างข้อมูล")return alert("ยกเลิกการล้างข้อมูล");
+  backup(true);
+  setTimeout(()=>{localStorage.removeItem(KEY);location.reload();},400);
+};
+
+$("checkBtn").onclick=()=>{
+  const issues=[],ids=new Set();
+  ["ingredients","menus","sales","expenses","purchases","wastes","stockTransactions"].forEach(group=>{
+    db[group].forEach(x=>{
+      if(!x.id)issues.push(`${group}: พบรายการไม่มี ID`);
+      else if(ids.has(x.id))issues.push(`พบ ID ซ้ำ: ${x.id}`);
+      else ids.add(x.id);
+    });
+  });
+  db.ingredients.forEach(x=>{
+    if(x.stock<0)issues.push(`สต๊อกติดลบ: ${x.name}`);
+    if(x.avgCost<0)issues.push(`ต้นทุนติดลบ: ${x.name}`);
+  });
+  db.menus.forEach(m=>m.recipe.forEach(r=>{
+    if(!getIng(r.ingId))issues.push(`สูตร ${m.name} อ้างถึงวัตถุดิบที่ไม่มีอยู่`);
+    if(r.qty<=0)issues.push(`สูตร ${m.name} มีจำนวนไม่ถูกต้อง`);
+  }));
+  db.purchases.forEach(p=>{
+    if(!getIng(p.ingId))issues.push(`รายการซื้อ ${p.id} ไม่พบวัตถุดิบ`);
+    if(db.stockTransactions.filter(t=>t.type==="purchase_cancel"&&t.refId===p.id).length>1)issues.push(`รายการซื้อ ${p.id} ถูกย้อนซ้ำ`);
+  });
+  db.sales.forEach(s=>{
+    if(db.stockTransactions.filter(t=>t.type==="sale_return"&&t.refId===s.id).length>s.deducted.length)issues.push(`รายการขาย ${s.id} อาจถูกคืนซ้ำ`);
+  });
+
+  $("integrityResult").className=issues.length?"alert":"success";
+  $("integrityResult").innerHTML=issues.length
+    ? `<b>พบ ${issues.length} ปัญหา</b><br>${issues.map(esc).join("<br>")}`
+    : `<b>✓ ไม่พบปัญหา</b><br>โครงสร้างข้อมูลและรายการอ้างอิงอยู่ในสภาพปกติ`;
+  toast(issues.length?`พบปัญหา ${issues.length} รายการ`:"ตรวจสอบแล้ว ไม่พบปัญหา",issues.length>0);
+};
+
+window.addEventListener("storage",e=>{
+  if(e.key!==KEY||!e.newValue)return;
+  try{db=migrate(JSON.parse(e.newValue));render();$("saveStatus").textContent="↻ อัปเดตจากแท็บอื่น";}
+  catch(_){$("saveStatus").textContent="⚠ ข้อมูลจากแท็บอื่นไม่ถูกต้อง";}
+});
+
+const today=localToday();
+["purchaseDate","adjustDate","saleDate","wasteDate","expenseDate","reportTo"].forEach(id=>$(id).value=today);
+const d=new Date(),first=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
+$("reportFrom").value=first;
+
+if(!loadWarning)persist(false);
+else setTimeout(()=>alert(loadWarning),100);
+
+render();
+</script>
+</body>
+</html>
